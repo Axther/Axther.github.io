@@ -149,6 +149,15 @@
     color:var(--text-dim);
     font-size:17px;
   }
+  .game-list{
+    margin:10px 0 0;
+    padding-left:20px;
+    max-width:480px;
+    color:var(--text-dim);
+    font-size:17px;
+    line-height:1.7;
+  }
+  .game-list li::marker{ color:var(--text-faint); }
   .hero-links{
     margin-top:32px;
     display:flex;
@@ -395,7 +404,13 @@
         <img src="https://raw.githubusercontent.com/Axther/Axther.github.io/refs/heads/main/pfp.jpg" alt="Aether" class="avatar">
       </div>
       <h1 class="gradient-text">Aether</h1>
-      <p class="lede">I build Discord bots — from AI-driven personalities to the utilities and systems that keep a server running.</p>
+      <p class="lede">Loves to watch anime, sometimes works on random Discord bot code (Python only), and currently playing:</p>
+      <ul class="game-list">
+        <li>Genshin Impact</li>
+        <li>Wuthering Waves</li>
+        <li>Arknights: Endfield</li>
+        <li>Neverness to Everness</li>
+      </ul>
       <div class="hero-links">
         <a href="https://github.com/Axther" target="_blank" rel="noopener">GitHub ↗</a>
         <a href="https://discord.com/users/894634240191389696" target="_blank" rel="noopener">Discord ↗</a>
@@ -452,7 +467,7 @@
         <h2>Playground</h2>
         <span class="count">run code</span>
       </div>
-      <p class="pg-note" style="margin-top:-20px; margin-bottom:20px;">Write a bit of C or Python and run it for real, right here — runs entirely in your browser, no server involved. First Python run takes a few seconds to load.</p>
+
 
       <div class="pg-tabs" id="pgTabs">
         <button class="pg-tab active" data-lang="c">C</button>
@@ -604,7 +619,8 @@ int main(void) {
 
   // both languages run fully client-side — no backend, so nothing to be
   // unauthorized or unreachable.
-  const JSCPP_URL = 'https://cdn.jsdelivr.net/npm/JSCPP@2.0.9/dist/JSCPP.es5.min.js';
+  const JSCPP_URL = 'https://cdn.jsdelivr.net/gh/felixhao28/JSCPP@gh-pages/dist/JSCPP.es5.min.js';
+  const JSCPP_FALLBACK_URL = 'https://raw.githubusercontent.com/felixhao28/JSCPP/gh-pages/dist/JSCPP.es5.min.js';
   const PYODIDE_URL = 'https://cdn.jsdelivr.net/pyodide/v0.26.3/full/pyodide.js';
 
   let pyodideInstance = null;
@@ -621,7 +637,11 @@ int main(void) {
   }
 
   async function ensureJSCPP(){
-    if(!window.JSCPP) await loadScript(JSCPP_URL);
+    if(window.JSCPP) return;
+    await loadScript(JSCPP_URL);
+    if(window.JSCPP) return;
+    await loadScript(JSCPP_FALLBACK_URL);
+    if(!window.JSCPP) throw new Error('the C interpreter failed to load');
   }
 
   async function ensurePyodide(){
