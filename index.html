@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b0e16">
+<title>Aether</title>
+<meta name="description" content="Aether — building ML pipelines and Discord bots.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0b0e16;
+    --bg-raised: #121623;
+    --bg-raised-2: #171c2c;
+    --line: #232a3d;
+    --text: #e6e9f2;
+    --text-dim: #8991a8;
+    --text-faint: #565f78;
+    --accent: #8ea2ff;
+    --accent-dim: #5c6ba8;
+    --accent-2: #5fe0c0;
+    --radius: 10px;
+    --max: 720px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    font-size:16px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3, .display{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    letter-spacing:-0.01em;
+    margin:0;
+  }
+  code, .mono{
+    font-family:'JetBrains Mono', monospace;
+  }
+  a{color:inherit;}
+  ::selection{background:var(--accent-dim); color:#fff;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+
+  /* ---------- layout shell ---------- */
+  .wrap{
+    max-width:var(--max);
+    margin:0 auto;
+    padding:0 24px;
+  }
+
+  header.nav{
+    position:sticky; top:0; z-index:50;
+    background:rgba(11,14,22,0.82);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid transparent;
+    transition:border-color .3s ease;
+  }
+  header.nav.scrolled{ border-bottom-color:var(--line); }
+  .nav-inner{
+    max-width:var(--max);
+    margin:0 auto;
+    padding:16px 24px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .nav-mark{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:15px;
+    color:var(--text);
+    text-decoration:none;
+  }
+  .nav-mark span{ color:var(--accent); }
+  .nav-links{
+    display:flex; gap:22px; list-style:none; margin:0; padding:0;
+  }
+  .nav-links a{
+    text-decoration:none;
+    color:var(--text-dim);
+    font-size:14px;
+    transition:color .18s ease;
+  }
+  .nav-links a:hover{ color:var(--text); }
+
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative;
+    padding:96px 0 88px;
+    overflow:hidden;
+  }
+  #stars{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    z-index:0;
+    opacity:0.9;
+    mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
+  }
+  .hero .wrap{ position:relative; z-index:1; }
+  .eyebrow{
+    color:var(--accent-2);
+    font-size:13px;
+    font-family:'JetBrains Mono', monospace;
+    margin-bottom:18px;
+  }
+  .hero h1{
+    font-size:clamp(42px, 8vw, 64px);
+    line-height:1.02;
+  }
+  .hero p.lede{
+    margin-top:20px;
+    max-width:480px;
+    color:var(--text-dim);
+    font-size:17px;
+  }
+  .hero-links{
+    margin-top:32px;
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  .hero-links a{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:9px 16px;
+    border:1px solid var(--line);
+    border-radius:999px;
+    text-decoration:none;
+    font-size:14px;
+    color:var(--text);
+    background:var(--bg-raised);
+    transition:border-color .18s ease, transform .18s ease;
+  }
+  .hero-links a:hover{ border-color:var(--accent-dim); transform:translateY(-1px); }
+
+  /* ---------- sections ---------- */
+  section{ padding:72px 0; border-top:1px solid var(--line); }
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:36px;
+  }
+  .section-head h2{ font-size:22px; }
+  .section-head .count{
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    color:var(--text-faint);
+  }
+
+  /* ---------- projects ---------- */
+  .project{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:14px;
+    padding:26px 0;
+    border-top:1px solid var(--line);
+  }
+  .project:first-of-type{ border-top:none; padding-top:0; }
+  .project-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:16px;
+  }
+  .project h3{ font-size:19px; }
+  .project .tag{
+    flex-shrink:0;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    color:var(--accent-2);
+    border:1px solid rgba(95,224,192,0.3);
+    padding:3px 9px;
+    border-radius:999px;
+    white-space:nowrap;
+  }
+  .project p{
+    color:var(--text-dim);
+    font-size:15px;
+    max-width:600px;
+  }
+  .project .stack{
+    display:flex; flex-wrap:wrap; gap:8px;
+    margin-top:4px;
+  }
+  .project .stack span{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    color:var(--text-faint);
+  }
+  .project .stack span:not(:last-child)::after{
+    content:"·";
+    margin-left:8px;
+    color:var(--line);
+  }
+
+  /* ---------- skills ---------- */
+  .skill-groups{
+    display:grid;
+    gap:24px;
+  }
+  .skill-group h4{
+    font-size:12px;
+    text-transform:none;
+    color:var(--text-faint);
+    font-weight:500;
+    margin-bottom:10px;
+  }
+  .skill-pills{
+    display:flex; flex-wrap:wrap; gap:8px;
+  }
+  .skill-pills span{
+    padding:6px 12px;
+    background:var(--bg-raised);
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-size:13px;
+    color:var(--text);
+  }
+
+  /* ---------- playground ---------- */
+  .terminal{
+    background:#0a0d14;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .term-bar{
+    display:flex; align-items:center; gap:8px;
+    padding:11px 14px;
+    background:var(--bg-raised);
+    border-bottom:1px solid var(--line);
+  }
+  .term-dot{ width:10px; height:10px; border-radius:50%; background:var(--line); }
+  .term-title{
+    margin-left:6px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    color:var(--text-faint);
+  }
+  .term-body{
+    padding:18px 16px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:13.5px;
+    min-height:190px;
+    color:#c7ccdb;
+  }
+  .term-line{ margin:0 0 6px; white-space:pre-wrap; }
+  .term-line.cmd{ color:var(--accent-2); }
+  .term-line.dim{ color:var(--text-faint); }
+  .term-line.result-top{ color:var(--accent); }
+  .term-caret{
+    display:inline-block; width:7px; height:14px;
+    background:var(--accent-2);
+    vertical-align:-2px;
+    animation:blink 1s step-end infinite;
+  }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  .playground-controls{
+    margin-top:16px;
+    display:flex; gap:10px; flex-wrap:wrap;
+  }
+  .pg-btn{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    padding:8px 14px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--bg-raised);
+    color:var(--text-dim);
+    cursor:pointer;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .pg-btn:hover{ border-color:var(--accent-dim); color:var(--text); }
+  .pg-btn:disabled{ opacity:0.4; cursor:default; }
+  .pg-btn.pg-run{ color:var(--accent-2); border-color:rgba(95,224,192,0.35); }
+  .pg-note{
+    margin-top:14px;
+    font-size:13px;
+    color:var(--text-faint);
+    max-width:520px;
+  }
+
+  .pg-tabs{
+    display:flex; gap:6px;
+    margin-bottom:12px;
+  }
+  .pg-tab{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    padding:7px 14px;
+    border-radius:7px;
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--text-faint);
+    cursor:pointer;
+    transition:border-color .15s ease, color .15s ease, background .15s ease;
+  }
+  .pg-tab:hover{ color:var(--text-dim); }
+  .pg-tab.active{
+    color:var(--accent);
+    border-color:var(--accent-dim);
+    background:var(--bg-raised);
+  }
+
+  .editor{
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+    background:#0a0d14;
+  }
+  #pgEditor{
+    display:block;
+    width:100%;
+    min-height:190px;
+    resize:vertical;
+    border:none;
+    outline:none;
+    background:transparent;
+    color:var(--text);
+    font-family:'JetBrains Mono', monospace;
+    font-size:13.5px;
+    line-height:1.55;
+    padding:16px;
+    tab-size:4;
+  }
+
+  footer{
+    padding:40px 0 60px;
+    color:var(--text-faint);
+    font-size:13px;
+  }
+
+  @media (min-width:640px){
+    .skill-groups{ grid-template-columns:1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="nav" id="siteNav">
+  <div class="nav-inner">
+    <a href="#top" class="nav-mark">a<span>e</span>ther</a>
+    <ul class="nav-links">
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#playground">Playground</a></li>
+    </ul>
+  </div>
+</header>
+
+<main>
+  <section class="hero" id="top">
+    <canvas id="stars"></canvas>
+    <div class="wrap">
+      <div class="eyebrow">// currently training something</div>
+      <h1>Aether</h1>
+      <p class="lede">I build machine learning pipelines and the Discord bots that put them to work — spawn classifiers, rank cards, and whatever else a server needs.</p>
+      <div class="hero-links">
+        <!-- Replace these hrefs with your real profile links -->
+        <a href="#">GitHub ↗</a>
+        <a href="#">Discord ↗</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="projects">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Projects</h2>
+        <span class="count">02</span>
+      </div>
+
+      <div class="project">
+        <div class="project-top">
+          <h3>Poketwo Spawn Classifier</h3>
+          <span class="tag">computer vision</span>
+        </div>
+        <p>An image classification system built to identify Poketwo spawn images. Trains an EfficientNet-B3 model at 224×224 in PyTorch, exports to ONNX for fast inference, and serves predictions straight into Discord.</p>
+        <div class="stack">
+          <span>PyTorch</span>
+          <span>EfficientNet-B3</span>
+          <span>ONNX</span>
+          <span>discord.py</span>
+        </div>
+      </div>
+
+      <div class="project">
+        <div class="project-top">
+          <h3>Leveling System Cog</h3>
+          <span class="tag">discord bot</span>
+        </div>
+        <p>A leveling cog for Discord servers with custom rank cards rendered in Pillow, SQLite-backed XP tracking, and leaderboard commands.</p>
+        <div class="stack">
+          <span>Python</span>
+          <span>Pillow</span>
+          <span>SQLite</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="skills">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Skills</h2>
+      </div>
+      <div class="skill-groups">
+        <div class="skill-group">
+          <h4>Machine learning</h4>
+          <div class="skill-pills">
+            <span>PyTorch</span>
+            <span>ONNX</span>
+            <span>Image classification</span>
+            <span>Model export & inference</span>
+          </div>
+        </div>
+        <div class="skill-group">
+          <h4>Bots & backend</h4>
+          <div class="skill-pills">
+            <span>discord.py</span>
+            <span>SQLite</span>
+            <span>Pillow</span>
+            <span>Python</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="playground">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Playground</h2>
+        <span class="count">run code</span>
+      </div>
+      <p class="pg-note" style="margin-top:-20px; margin-bottom:20px;">Write a bit of C or Python and run it for real, right here.</p>
+
+      <div class="pg-tabs" id="pgTabs">
+        <button class="pg-tab active" data-lang="c">C</button>
+        <button class="pg-tab" data-lang="python">Python</button>
+      </div>
+
+      <div class="editor">
+        <textarea id="pgEditor" spellcheck="false"></textarea>
+      </div>
+
+      <div class="playground-controls">
+        <button class="pg-btn pg-run" id="pgRun">▸ run</button>
+        <button class="pg-btn" id="pgReset">reset code</button>
+      </div>
+
+      <div class="terminal" style="margin-top:16px;">
+        <div class="term-bar">
+          <div class="term-dot"></div>
+          <div class="term-dot"></div>
+          <div class="term-dot"></div>
+          <span class="term-title" id="termLabel">output</span>
+        </div>
+        <div class="term-body" id="termBody">
+          <p class="term-line dim">run something to see output here<span class="term-caret"></span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    built by aether · <span class="mono">2026</span>
+  </div>
+</footer>
+
+<script>
+  // nav border on scroll
+  const nav = document.getElementById('siteNav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 8);
+  }, { passive:true });
+
+  // starfield
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+  let w, h, dpr;
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function resize(){
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = canvas.offsetWidth;
+    h = canvas.offsetHeight || canvas.parentElement.offsetHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    const count = Math.floor((w*h)/9000);
+    stars = Array.from({length:count}, () => ({
+      x: Math.random()*w,
+      y: Math.random()*h,
+      r: Math.random()*1.3 + 0.3,
+      s: Math.random()*0.25 + 0.05,
+      o: Math.random()*0.6 + 0.25
+    }));
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,w,h);
+    for(const st of stars){
+      ctx.beginPath();
+      ctx.arc(st.x, st.y, st.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(142,162,255,${st.o})`;
+      ctx.fill();
+      if(!prefersReduced){
+        st.y += st.s;
+        if(st.y > h) st.y = 0;
+      }
+    }
+    if(!prefersReduced) requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+  draw();
+
+  // playground: real C / Python execution via Piston
+  const termBody = document.getElementById('termBody');
+  const termLabel = document.getElementById('termLabel');
+  const editor = document.getElementById('pgEditor');
+  const runBtn = document.getElementById('pgRun');
+  const resetBtn = document.getElementById('pgReset');
+  const tabs = document.querySelectorAll('.pg-tab');
+
+  const starters = {
+    c: `#include <stdio.h>
+
+int main(void) {
+    printf("hello from c\\n");
+    return 0;
+}
+`,
+    python: `print("hello from python")
+`
+  };
+
+  const pistonConfig = {
+    c: { language: 'c', version: '10.2.0', filename: 'main.c' },
+    python: { language: 'python', version: '3.10.0', filename: 'main.py' }
+  };
+
+  let currentLang = 'c';
+  editor.value = starters[currentLang];
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      if(tab.dataset.lang === currentLang) return;
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentLang = tab.dataset.lang;
+      editor.value = starters[currentLang];
+      setOutput('run something to see output here', 'dim', true);
+    });
+  });
+
+  resetBtn.addEventListener('click', () => {
+    editor.value = starters[currentLang];
+  });
+
+  function setOutput(text, cls, showCaret){
+    termBody.innerHTML = '';
+    const p = document.createElement('p');
+    p.className = 'term-line ' + (cls || '');
+    p.textContent = text;
+    if(showCaret){
+      const caret = document.createElement('span');
+      caret.className = 'term-caret';
+      p.appendChild(caret);
+    }
+    termBody.appendChild(p);
+  }
+
+  function appendOutput(text, cls){
+    const p = document.createElement('p');
+    p.className = 'term-line ' + (cls || '');
+    p.textContent = text;
+    termBody.appendChild(p);
+  }
+
+  async function runCode(){
+    const cfg = pistonConfig[currentLang];
+    termLabel.textContent = cfg.filename;
+    runBtn.disabled = true;
+    setOutput('running...', 'dim', true);
+
+    try{
+      const res = await fetch('https://emkc.org/api/v2/piston/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          language: cfg.language,
+          version: cfg.version,
+          files: [{ name: cfg.filename, content: editor.value }]
+        })
+      });
+
+      if(!res.ok){
+        setOutput(`request failed (${res.status})`, '');
+        return;
+      }
+
+      const data = await res.json();
+      const run = data.run || {};
+      const compile = data.compile || null;
+      termBody.innerHTML = '';
+
+      if(compile && compile.stderr && compile.stderr.trim()){
+        appendOutput(compile.stderr.trim(), '');
+      }
+      if(run.stdout && run.stdout.trim()){
+        appendOutput(run.stdout.trim(), 'result-top');
+      }
+      if(run.stderr && run.stderr.trim()){
+        appendOutput(run.stderr.trim(), '');
+      }
+      if(!(run.stdout && run.stdout.trim()) && !(run.stderr && run.stderr.trim()) && !(compile && compile.stderr && compile.stderr.trim())){
+        appendOutput('(no output)', 'dim');
+      }
+      appendOutput(`exit code ${run.code}`, 'dim');
+    }catch(err){
+      setOutput('could not reach the code runner — try again', '');
+    }finally{
+      runBtn.disabled = false;
+    }
+  }
+
+  runBtn.addEventListener('click', runCode);
+</script>
+
+</body>
+</html>
