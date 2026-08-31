@@ -394,13 +394,11 @@
       <div class="avatar-ring">
         <img src="https://raw.githubusercontent.com/Axther/Axther.github.io/refs/heads/main/pfp.jpg" alt="Aether" class="avatar">
       </div>
-      <div class="eyebrow">// currently building a discord bot</div>
       <h1 class="gradient-text">Aether</h1>
       <p class="lede">I build Discord bots — from AI-driven personalities to the utilities and systems that keep a server running.</p>
       <div class="hero-links">
-        <!-- Replace these hrefs with your real profile links -->
-        <a href="#">GitHub ↗</a>
-        <a href="#">Discord ↗</a>
+        <a href="https://github.com/Axther" target="_blank" rel="noopener">GitHub ↗</a>
+        <a href="https://discord.com/users/894634240191389696" target="_blank" rel="noopener">Discord ↗</a>
       </div>
     </div>
   </section>
@@ -441,15 +439,7 @@
             <span>aiohttp</span>
             <span>Python</span>
             <span>SQLite / JSON</span>
-          </div>
-        </div>
-        <div class="skill-group">
-          <h4>Integrations</h4>
-          <div class="skill-pills">
-            <span>AI APIs</span>
             <span>Pillow</span>
-            <span>Third-party REST APIs</span>
-            <span>Persistent UI views</span>
           </div>
         </div>
       </div>
@@ -462,7 +452,7 @@
         <h2>Playground</h2>
         <span class="count">run code</span>
       </div>
-      <p class="pg-note" style="margin-top:-20px; margin-bottom:20px;">Write a bit of C or Python and run it for real, right here.</p>
+      <p class="pg-note" style="margin-top:-20px; margin-bottom:20px;">Write a bit of C or Python and run it for real, right here — runs entirely in your browser, no server involved. First Python run takes a few seconds to load.</p>
 
       <div class="pg-tabs" id="pgTabs">
         <button class="pg-tab active" data-lang="c">C</button>
@@ -612,74 +602,86 @@ int main(void) {
     termBody.appendChild(p);
   }
 
-  const RUNNER_BASE = 'https://api.paiza.io';
+  // both languages run fully client-side — no backend, so nothing to be
+  // unauthorized or unreachable.
+  const JSCPP_URL = 'https://cdn.jsdelivr.net/npm/JSCPP@2.0.9/dist/JSCPP.es5.min.js';
+  const PYODIDE_URL = 'https://cdn.jsdelivr.net/pyodide/v0.26.3/full/pyodide.js';
 
-  function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+  let pyodideInstance = null;
+
+  function loadScript(src){
+    return new Promise((resolve, reject) => {
+      if(document.querySelector(`script[src="${src}"]`)){ resolve(); return; }
+      const el = document.createElement('script');
+      el.src = src;
+      el.onload = () => resolve();
+      el.onerror = () => reject(new Error('failed to load ' + src));
+      document.head.appendChild(el);
+    });
+  }
+
+  async function ensureJSCPP(){
+    if(!window.JSCPP) await loadScript(JSCPP_URL);
+  }
+
+  async function ensurePyodide(){
+    if(pyodideInstance) return pyodideInstance;
+    await loadScript(PYODIDE_URL);
+    pyodideInstance = await loadPyodide();
+    return pyodideInstance;
+  }
+
+  async function runC(){
+    await ensureJSCPP();
+    setOutput('running...', 'dim', true);
+    let output = '';
+    let exitCode = 0;
+    try{
+      exitCode = window.JSCPP.run(editor.value, '', {
+        stdio: { write: (s) => { output += s; } },
+        unsigned_overflow: 'ignore'
+      });
+    }catch(e){
+      termBody.innerHTML = '';
+      appendOutput((e && e.message) ? e.message : String(e), '');
+      return;
+    }
+    termBody.innerHTML = '';
+    appendOutput(output.trim() ? output.trim() : '(no output)', output.trim() ? 'result-top' : 'dim');
+    appendOutput(`exit code ${exitCode}`, 'dim');
+  }
+
+  async function runPython(){
+    const pyodide = await ensurePyodide();
+    setOutput('running...', 'dim', true);
+    let output = '';
+    let errored = false;
+    pyodide.setStdout({ batched: (s) => { output += s + '\n'; } });
+    pyodide.setStderr({ batched: (s) => { output += s + '\n'; } });
+    try{
+      await pyodide.runPythonAsync(editor.value);
+    }catch(e){
+      errored = true;
+      output += (e && e.message) ? e.message : String(e);
+    }
+    termBody.innerHTML = '';
+    appendOutput(output.trim() ? output.trim() : '(no output)', (!errored && output.trim()) ? 'result-top' : 'dim');
+    appendOutput(`exit code ${errored ? 1 : 0}`, 'dim');
+  }
 
   async function runCode(){
     const cfg = runnerConfig[currentLang];
     termLabel.textContent = cfg.filename;
     runBtn.disabled = true;
-    setOutput('submitting...', 'dim', true);
-
+    setOutput(currentLang === 'python' ? 'starting python runtime...' : 'starting...', 'dim', true);
     try{
-      const createRes = await fetch(`${RUNNER_BASE}/runners/create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          source_code: editor.value,
-          language: cfg.language,
-          input: '',
-          api_key: 'guest'
-        })
-      });
-
-      if(!createRes.ok){
-        setOutput(`request failed (${createRes.status})`, '');
-        return;
+      if(currentLang === 'c'){
+        await runC();
+      }else{
+        await runPython();
       }
-      const created = await createRes.json();
-      if(!created.id){
-        setOutput(created.error || 'could not start a run', '');
-        return;
-      }
-
-      setOutput('running...', 'dim', true);
-
-      let status = 'running';
-      let tries = 0;
-      while(status !== 'completed' && tries < 20){
-        await sleep(700);
-        const statusRes = await fetch(`${RUNNER_BASE}/runners/get_status?id=${created.id}&api_key=guest`);
-        const statusData = await statusRes.json();
-        status = statusData.status;
-        tries++;
-      }
-
-      if(status !== 'completed'){
-        setOutput('timed out waiting for a result — try again', '');
-        return;
-      }
-
-      const detailsRes = await fetch(`${RUNNER_BASE}/runners/get_details?id=${created.id}&api_key=guest`);
-      const d = await detailsRes.json();
-      termBody.innerHTML = '';
-
-      if(d.build_stderr && d.build_stderr.trim()){
-        appendOutput(d.build_stderr.trim(), '');
-      }
-      if(d.stdout && d.stdout.trim()){
-        appendOutput(d.stdout.trim(), 'result-top');
-      }
-      if(d.stderr && d.stderr.trim()){
-        appendOutput(d.stderr.trim(), '');
-      }
-      if(!(d.stdout && d.stdout.trim()) && !(d.stderr && d.stderr.trim()) && !(d.build_stderr && d.build_stderr.trim())){
-        appendOutput('(no output)', 'dim');
-      }
-      appendOutput(`exit code ${d.exit_code}`, 'dim');
     }catch(err){
-      setOutput('could not reach the code runner — try again', '');
+      setOutput('could not load the runtime — try again', '');
     }finally{
       runBtn.disabled = false;
     }
